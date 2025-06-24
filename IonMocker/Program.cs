@@ -1,8 +1,6 @@
 using Amazon.IonDotnet.Builders;
-using Amazon.IonDotnet.Tree;
 using Google.Cloud.Storage.V1;
 using Google.Cloud.PubSub.V1;
-using System.Text;
 using System.Text.Json;
 
 var projectId = "your-gcp-project-id";
@@ -13,9 +11,12 @@ var topicId = "your-pubsub-topic-id";
 var ionStream = new MemoryStream();
 using (var writer = IonBinaryWriterBuilder.Build(ionStream))
 {
-    writer.WriteValues(IonLoader.Default.Load("[{name:\"John Doe\", age:30, city:\"New York\"}, {name:\"Jane Doe\", age:25, city:\"London\"}]"));
+    var json = "[{name:\"John Doe\", age:30, city:\"New York\"}, {name:\"Jane Doe\", age:25, city:\"London\"}]";
+    var reader = IonReaderBuilder.Build(json);
+    writer.WriteValues(reader);
     writer.Finish();
 }
+
 
 ionStream.Position = 0;
 
@@ -32,8 +33,8 @@ var publisher = await PublisherClient.CreateAsync(new TopicName(projectId, topic
 var message = new PubsubMessage
 {
     Data = Google.Protobuf.ByteString.CopyFrom(
-        JsonSerializer.Serialize(new { message = new { data = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { bucket = bucketName, name = objectName }))) } }),
-        Encoding.UTF8)
+        JsonSerializer.Serialize(new { message = new { data = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { bucket = bucketName, name = objectName }))) } }),
+        System.Text.Encoding.UTF8)
 };
 
 var messageId = await publisher.PublishAsync(message);
