@@ -75,4 +75,10 @@ The application is designed to be deployed as a container.
     ```
     This command will deploy the container and provide you with a URL for the service. You will use this URL to configure your Pub/Sub push subscription.
 
+## Running the Unit Tests
+
+The project includes a suite of unit tests to ensure the correctness of the application logic. To run the tests, navigate to the root directory of the project and run the following command:
+
+```bash
+dotnet test
 ```
