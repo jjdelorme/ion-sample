@@ -2,6 +2,37 @@
 
 This project is a .NET Web API designed to process binary ION files from Google Cloud Storage and load their contents into Google BigQuery. It is designed to be deployed as a container on Google Cloud Run and triggered by push notifications from Google Cloud Pub/Sub.
 
+## Application Architecture
+
+The following diagram illustrates the end-to-end workflow, from data generation by the `IonMocker` to final processing by the `IonProcessor`.
+
+```mermaid
+graph TD
+    subgraph "IonMocker (Test Data Generator)"
+        A[Generate ION File] --> B[Upload to GCS];
+        B --> C[Publish to Pub/Sub];
+    end
+
+    subgraph "Google Cloud Platform"
+        GCS[Google Cloud Storage]
+        PubSub[Google Cloud Pub/Sub]
+        CloudRun[Google Cloud Run]
+        BigQuery[Google BigQuery]
+    end
+
+    subgraph "IonProcessor API (Cloud Run Service)"
+        D[Receive Pub/Sub Notification] --> E[Download ION from GCS];
+        E --> F[Process ION Data];
+        F --> G[Write to BigQuery];
+    end
+
+    C -- Publishes message --> PubSub;
+    B -- Stores file --> GCS;
+    PubSub -- Pushes notification --> D;
+    E -- Reads file --> GCS;
+    G -- Inserts data --> BigQuery;
+```
+
 ## Project Overview
 
 The workflow is as follows:
@@ -28,6 +59,8 @@ The workflow is as follows:
 
 ## Configuration
 
+### IonProcessor
+
 Before running the application, you must configure your Google Cloud settings in `IonProcessor/appsettings.json`:
 
 ```json
@@ -42,9 +75,21 @@ Before running the application, you must configure your Google Cloud settings in
 
 Replace the placeholder values with your actual GCP Project ID, BigQuery Dataset ID, and BigQuery Table ID.
 
+### IonMocker
+
+The `IonMocker` is a console application used for generating test data. You must configure the GCP settings directly in `IonMocker/Program.cs`:
+
+```csharp
+var projectId = "your-gcp-project-id";
+var bucketName = "your-gcs-bucket-name";
+var topicId = "your-pubsub-topic-id";
+```
+
+Replace the placeholder values with your actual GCP Project ID, GCS Bucket Name, and Pub/Sub Topic ID.
+
 ## Deployment to Google Cloud Run
 
-The application is designed to be deployed as a container.
+The `IonProcessor` application is designed to be deployed as a container.
 
 ### Prerequisites
 
@@ -76,10 +121,21 @@ The application is designed to be deployed as a container.
     ```
     This command will deploy the container and provide you with a URL for the service. You will use this URL to configure your Pub/Sub push subscription.
 
-## Running the Unit Tests
+## Running the Solution
+
+### Running the Test Data Generator
+
+To generate a new test file, upload it to GCS, and send a Pub/Sub notification, run the `IonMocker` project:
+
+```bash
+dotnet run --project IonMocker
+```
+
+### Running the Unit Tests
 
 The project includes a suite of unit tests to ensure the correctness of the application logic. To run the tests, navigate to the root directory of the project and run the following command:
 
 ```bash
 dotnet test
 ```
+
