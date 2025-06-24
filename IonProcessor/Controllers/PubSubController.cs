@@ -1,16 +1,9 @@
 using System;
-using Amazon.IonDotnet;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amazon.IonDotnet.Builders;
-using Google.Cloud.BigQuery.V2;
-using Google.Cloud.Storage.V1;
+using IonProcessor.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Linq;
 
 namespace IonProcessor.Controllers
@@ -20,16 +13,17 @@ namespace IonProcessor.Controllers
     public class PubSubController : ControllerBase
     {
         private readonly ILogger<PubSubController> _logger;
-        private readonly StorageClient _storageClient;
-        private readonly BigQueryClient _bigQueryClient;
-        private readonly GoogleCloudOptions _options;
+        private readonly IIonProcessingService _ionProcessingService;
+        private readonly IBigQueryService _bigQueryService;
 
-        public PubSubController(ILogger<PubSubController> logger, StorageClient storageClient, BigQueryClient bigQueryClient, IOptions<GoogleCloudOptions> options)
+        public PubSubController(
+            ILogger<PubSubController> logger,
+            IIonProcessingService ionProcessingService,
+            IBigQueryService bigQueryService)
         {
             _logger = logger;
-            _storageClient = storageClient;
-            _bigQueryClient = bigQueryClient;
-            _options = options.Value;
+            _ionProcessingService = ionProcessingService;
+            _bigQueryService = bigQueryService;
         }
 
         [HttpPost]
@@ -48,25 +42,8 @@ namespace IonProcessor.Controllers
                     return BadRequest("Bucket or object name not found in Pub/Sub message.");
                 }
 
-                _logger.LogInformation($"Processing file: {objectName} from bucket: {bucketName}");
-
-                using (var memoryStream = new MemoryStream())
-                {
-                    await _storageClient.DownloadObjectAsync(bucketName, objectName, memoryStream);
-                    memoryStream.Position = 0;
-
-                    var ionReader = IonReaderBuilder.Build(memoryStream);
-                    var bigQueryTable = await _bigQueryClient.GetTableAsync(_options.DatasetId, _options.TableId);
-                    var rows = new List<BigQueryInsertRow>();
-                    var stringBuilder = new StringBuilder();
-                    using (var stringWriter = new StringWriter(stringBuilder))
-                    using (var ionWriter = IonTextWriterBuilder.Build(stringWriter))
-                    {
-                        ionWriter.WriteValues(ionReader);
-                    }
-                    rows.Add(new BigQueryInsertRow { { "data", stringBuilder.ToString() } });
-                    await _bigQueryClient.InsertRowsAsync(bigQueryTable.Reference, rows);
-                }
+                var ionData = await _ionProcessingService.ProcessIonFileAsync(bucketName, objectName);
+                await _bigQueryService.InsertRowAsync(ionData);
 
                 _logger.LogInformation($"Successfully processed file: {objectName}");
                 return Ok();

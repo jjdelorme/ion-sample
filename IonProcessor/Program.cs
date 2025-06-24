@@ -1,6 +1,7 @@
 using Google.Cloud.BigQuery.V2;
 using Google.Cloud.Storage.V1;
 using IonProcessor;
+using IonProcessor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,9 @@ builder.Services.Configure<GoogleCloudOptions>(builder.Configuration.GetSection(
 
 builder.Services.AddSingleton(x => StorageClient.Create());
 builder.Services.AddSingleton(x => BigQueryClient.Create(builder.Configuration["GoogleCloud:ProjectId"]));
+
+builder.Services.AddScoped<IIonProcessingService, IonProcessingService>();
+builder.Services.AddScoped<IBigQueryService, BigQueryService>();
 
 
 var app = builder.Build();
