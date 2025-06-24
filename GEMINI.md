@@ -10,7 +10,7 @@ The user emphasized the need for a scalable and reliable solution, with proper h
 
 ## My Implementation Steps
 
-1.  **Scaffolded a new .NET Web API project** in the `IonProcessor` directory.
+1.  **Scaffolded a new .NET Web API project** in the `IonProcessor` directory, initially targeting .NET 9 and later migrating to .NET 8.
 2.  **Added NuGet packages:**
     *   `Amazon.IonDotnet`
     *   `Google.Cloud.PubSub.V1`
