@@ -18,13 +18,15 @@ namespace IonProcessor.Tests
     {
         private readonly Mock<StorageClient> _mockStorageClient;
         private readonly Mock<ILogger<IonProcessingService>> _mockLogger;
+        private readonly Mock<IDecompressionService> _mockDecompressionService;
         private readonly IonProcessingService _service;
 
         public IonProcessingServiceTests()
         {
             _mockStorageClient = new Mock<StorageClient>();
             _mockLogger = new Mock<ILogger<IonProcessingService>>();
-            _service = new IonProcessingService(_mockStorageClient.Object, _mockLogger.Object);
+            _mockDecompressionService = new Mock<IDecompressionService>();
+            _service = new IonProcessingService(_mockStorageClient.Object, _mockLogger.Object, _mockDecompressionService.Object);
         }
 
         [Fact]
@@ -46,12 +48,15 @@ namespace IonProcessor.Tests
                 })
                 .Returns(Task.FromResult(new Object()));
 
+            _mockDecompressionService.Setup(d => d.Decompress(It.IsAny<Stream>())).Returns<Stream>(s => s);
+
 
             // Act
             var result = await _service.ProcessIonFileAsync(bucketName, objectName);
 
             // Assert
             Assert.Equal(ionData, result.Trim());
+            _mockDecompressionService.Verify(d => d.Decompress(It.IsAny<Stream>()), Times.Once);
         }
 
         [Fact]

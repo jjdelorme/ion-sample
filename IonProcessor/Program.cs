@@ -18,6 +18,7 @@ builder.Services.AddSingleton(x => BigQueryClient.Create(builder.Configuration["
 
 builder.Services.AddScoped<IIonProcessingService, IonProcessingService>();
 builder.Services.AddScoped<IBigQueryService, BigQueryService>();
+builder.Services.AddScoped<IDecompressionService, NoOpDecompressionService>();
 
 
 var app = builder.Build();

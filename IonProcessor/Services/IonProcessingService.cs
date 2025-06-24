@@ -11,11 +11,13 @@ namespace IonProcessor.Services
     {
         private readonly StorageClient _storageClient;
         private readonly ILogger<IonProcessingService> _logger;
+        private readonly IDecompressionService _decompressionService;
 
-        public IonProcessingService(StorageClient storageClient, ILogger<IonProcessingService> logger)
+        public IonProcessingService(StorageClient storageClient, ILogger<IonProcessingService> logger, IDecompressionService decompressionService)
         {
             _storageClient = storageClient;
             _logger = logger;
+            _decompressionService = decompressionService;
         }
 
         public async Task<string> ProcessIonFileAsync(string bucketName, string objectName)
@@ -27,14 +29,17 @@ namespace IonProcessor.Services
                 await _storageClient.DownloadObjectAsync(bucketName, objectName, memoryStream);
                 memoryStream.Position = 0;
 
-                var ionReader = IonReaderBuilder.Build(memoryStream);
-                var stringBuilder = new StringBuilder();
-                using (var stringWriter = new StringWriter(stringBuilder))
-                using (var ionWriter = IonTextWriterBuilder.Build(stringWriter))
+                using (var decompressedStream = _decompressionService.Decompress(memoryStream))
                 {
-                    ionWriter.WriteValues(ionReader);
+                    var ionReader = IonReaderBuilder.Build(decompressedStream);
+                    var stringBuilder = new StringBuilder();
+                    using (var stringWriter = new StringWriter(stringBuilder))
+                    using (var ionWriter = IonTextWriterBuilder.Build(stringWriter))
+                    {
+                        ionWriter.WriteValues(ionReader);
+                    }
+                    return stringBuilder.ToString();
                 }
-                return stringBuilder.ToString();
             }
         }
     }

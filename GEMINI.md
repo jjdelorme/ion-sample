@@ -28,9 +28,10 @@ The user emphasized the need for a scalable and reliable solution, with proper h
 7.  **Created a `Dockerfile`** to containerize the application for deployment to Google Cloud Run.
 8.  **Cleaned up the default `Program.cs`** to remove the weather forecast example and correctly register the controllers.
 9.  **Refactored the core logic** out of the `PubSubController` and into `IonProcessingService` and `BigQueryService` to improve testability and separation of concerns.
-10. **Created a new xUnit test project** (`IonProcessor.Tests`) and added comprehensive unit tests for the controller and both services, ensuring the application is well-tested and reliable.
-11. **Created a `README.md`** with project overview and deployment instructions.
-12. **Created this `GEMINI.md`** file to maintain context.
+10. **Added a placeholder decompression service** (`IDecompressionService` and `NoOpDecompressionService`) to the `IonProcessingService` to prepare for handling compressed ION files.
+11. **Created a new xUnit test project** (`IonProcessor.Tests`) and added comprehensive unit tests for the controller and both services, ensuring the application is well-tested and reliable.
+12. **Created a `README.md`** with project overview and deployment instructions.
+13. **Created this `GEMINI.md`** file to maintain context.
 
 ## My Development Philosophy Reminders
 

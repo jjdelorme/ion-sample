@@ -9,9 +9,10 @@ The workflow is as follows:
 1.  A message is published to a Pub/Sub topic. The message contains the bucket and object name of an ION file in Google Cloud Storage.
 2.  Pub/Sub sends a push notification to the `/PubSub` endpoint of this Web API.
 3.  The API receives the notification, downloads the specified ION file from Google Cloud Storage.
-4.  It reads the binary ION data using the [ion-dotnet](https://github.com/amazon-ion/ion-dotnet) library.
-5.  The processed data is then written to a specified table in Google BigQuery.
-6.  The API sends an HTTP `200 OK` status code to acknowledge the Pub/Sub message, indicating successful processing. If processing fails, it returns an HTTP `500` status code, which signals Pub/Sub to nack (negatively acknowledge) the message, allowing for retries or dead-lettering.
+4.  The downloaded file is then decompressed (the specific algorithm is pending).
+5.  It reads the binary ION data using the [ion-dotnet](https://github.com/amazon-ion/ion-dotnet) library.
+6.  The processed data is then written to a specified table in Google BigQuery.
+7.  The API sends an HTTP `200 OK` status code to acknowledge the Pub/Sub message, indicating successful processing. If processing fails, it returns an HTTP `500` status code, which signals Pub/Sub to nack (negatively acknowledge) the message, allowing for retries or dead-lettering.
 
 ## Technologies Used
 
