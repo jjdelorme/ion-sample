@@ -157,39 +157,74 @@ gcloud pubsub subscriptions create your-subscription-id \
 
 **Important:** The Pub/Sub service account requires permissions to publish to the dead-letter topic. When you configure dead-lettering with `gcloud` as shown above, Google Cloud will automatically grant the necessary `pubsub.publisher` role to the service account.
 
-## Deployment to Google Cloud Run
+## Deployment
 
-The `IonProcessor` application is designed to be deployed as a container.
+This project uses a two-stage deployment process that separates infrastructure provisioning from application deployment.
+
+1.  **Infrastructure Deployment with Terraform:** Creates all the necessary Google Cloud resources (Artifact Registry, Cloud Run, Pub/Sub, etc.).
+2.  **Application Deployment with Cloud Build:** Builds the application container, pushes it to Artifact Registry, and deploys it to the Cloud Run service.
 
 ### Prerequisites
 
-*   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and configured.
-*   [Docker](https://docs.docker.com/get-docker/) installed.
+*   [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and authenticated.
+*   [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli) installed.
+*   The required Google Cloud APIs have been enabled for your project (this is handled by the Terraform script).
 
-### Steps
+### Step 1: Deploy the Infrastructure
 
-1.  **Build the Docker image:**
-    Open a terminal in the root directory of the project (the one containing the `Dockerfile`) and run the following command. Replace `your-gcp-project-id` with your actual GCP Project ID.
+The Terraform scripts in the `terraform/` directory will provision all the necessary cloud resources.
 
+1.  **Navigate to the Terraform directory:**
     ```bash
-    docker build -t gcr.io/your-gcp-project-id/ion-processor .
+    cd terraform
     ```
 
-2.  **Push the image to Google Container Registry (GCR):**
+2.  **Create a `terraform.tfvars` file:**
+    This file will contain the specific values for your environment. Create a file named `terraform.tfvars` and add the following content, replacing the placeholder values with your own:
 
-    ```bash
-    docker push gcr.io/your-gcp-project-id/ion-processor
+    ```hcl
+    project_id          = "your-gcp-project-id"
+    region              = "your-gcp-region" # e.g., "us-central1"
+    service_name        = "ion-processor"
+    gcs_bucket_name     = "your-unique-gcs-bucket-name"
+    bigquery_dataset_id = "your_bigquery_dataset"
+    bigquery_table_id   = "your_bigquery_table"
     ```
 
-3.  **Deploy the image to Cloud Run:**
+3.  **Initialize Terraform:**
+    ```bash
+    terraform init
+    ```
+
+4.  **Apply the Terraform configuration:**
+    Review the plan and, if it looks correct, type `yes` to proceed.
+    ```bash
+    terraform apply
+    ```
+
+This will create an Artifact Registry repository, a GCS bucket, Pub/Sub topics, and a Cloud Run service (initially deployed with a public placeholder image).
+
+### Step 2: Build and Deploy the Application
+
+Once the infrastructure is in place, you can deploy the `IonProcessor` application using Cloud Build.
+
+1.  **Navigate to the root directory of the project.**
+
+2.  **Submit the build to Cloud Build:**
+    This command uses the `cloudbuild.yaml` file to build, push, and deploy your service. Make sure the `_REPO_NAME` and `_REGION` variables match what you defined in your `terraform.tfvars` file.
 
     ```bash
-    gcloud run deploy ion-processor \
-      --image gcr.io/your-gcp-project-id/ion-processor \
-      --platform managed \
-      --region your-gcp-region # e.g., us-central1
+    gcloud builds submit --config cloudbuild.yaml \
+      --substitutions=_SERVICE_NAME="ion-processor",_REPO_NAME="ion-processor-repo",_REGION="us-central1"
     ```
-    This command will deploy the container and provide you with a URL for the service. You will use this URL to configure your Pub/Sub push subscription.
+
+Cloud Build will now execute the steps defined in `cloudbuild.yaml`:
+1.  Build the Docker image.
+2.  Push the image to your Artifact Registry repository.
+3.  Deploy the new image to your Cloud Run service, replacing the placeholder.
+
+Your `IonProcessor` is now live and ready to receive Pub/Sub notifications.
+
 
 ## Running the Solution
 

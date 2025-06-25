@@ -234,3 +234,22 @@ Thumbs.db
 
 # Rider
 .idea/
+
+# Development Settings
+**/appsettings.Development.json
+
+# direnv
+**/.envrc
+
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

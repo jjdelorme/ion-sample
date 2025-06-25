@@ -1,9 +1,11 @@
 using Google.Cloud.BigQuery.V2;
+using Google.Cloud.Logging.Console;
 using Google.Cloud.Storage.V1;
 using IonProcessor;
 using IonProcessor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.AddGoogleCloudConsole();
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -29,11 +31,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

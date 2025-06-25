@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using IonProcessor.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
 
 namespace IonProcessor.Controllers
 {
@@ -31,10 +31,20 @@ namespace IonProcessor.Controllers
         {
             try
             {
+                // Add Debug log for the whole message
+                _logger.LogDebug($"Received Pub/Sub message: {JsonSerializer.Serialize(message)}");
+
                 var data = Encoding.UTF8.GetString(Convert.FromBase64String(message.Message.Data));
-                var json = JObject.Parse(data);
-                var bucketName = json["bucket"]?.ToString();
-                var objectName = json["name"]?.ToString();
+                using var json = JsonDocument.Parse(data);
+                if (!json.RootElement.TryGetProperty("bucket", out var bucketElement) ||
+                    !json.RootElement.TryGetProperty("name", out var nameElement))
+                {
+                    _logger.LogError("Bucket or object name not found in Pub/Sub message.");
+                    return BadRequest("Bucket or object name not found in Pub/Sub message.");
+                }
+
+                var bucketName = bucketElement.GetString();
+                var objectName = nameElement.GetString();
 
                 if (bucketName is null || objectName is null)
                 {
