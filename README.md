@@ -244,3 +244,13 @@ The project includes a suite of unit tests to ensure the correctness of the appl
 dotnet test
 ```
 
+## AI Generation
+
+**NOTICE** This entire project was generated using the [Gemini CLI](https://github.com/google-gemini/gemini-cli) and Agent Mode in Gemini Code Assist. 
+
+### Initial Prompt
+```
+Can you create a new dotnet web api that will be hosted in Google Cloud Run and recieve push notifications from Google Cloud PubSub.  The remote publisher to PubSub will be putting messages on a topic that have a pointer to a Google Cloud Storage Bucket file.  This file is an ION file which this C# processor will load and process using the open source library (https://github.com/amazon-ion/ion-dotnet).  The goal is to take this file, read the binary ION format and write it's contents to BigQuery.  Each file is about 50mb and many of these files could be coming in at once, so we need to design for scale and reliability.  For example, the processor should read the message, but not ack the message until processing is successful.  If it fails, it should try to nack and log that failure so that another processor could retry, but PubSub might also be configured here to automatically send messages to a pubsub poison queue after a certain number of failures.
+```
+
+Subsequent prompts were used to refine the solution, each turn of the agent wrote a complete commit to the project.
