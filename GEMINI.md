@@ -33,8 +33,37 @@ The user emphasized the need for a scalable and reliable solution, with proper h
 12. **Created this `GEMINI.md`** file to maintain context.
 13. **Created the `IonMocker` console application** to generate test ION files, upload them to GCS, and publish notifications to Pub/Sub for end-to-end testing.
 
-## My Development Philosophy Reminders
+## Development Rules
 
-*   **Test-Driven Development (TDD):** When adding new features, I should write the tests first to define the desired behavior and then implement the code to make the tests pass.
-*   **Refactor Under Green:** I will only refactor the code when all existing tests are passing. This ensures that I don't introduce regressions while improving the code's design.
-*   **Comprehensive Testing:** I will strive to write tests that cover all critical paths, including success cases, error conditions, and edge cases.
+* Don’t try to be clever
+* Build the simplest code possible that will pass the test
+* With each change practice self reflection:
+    - How difficult was it to write?
+    - How hard is it to understand?
+    - How expensive will it be to change?
+* Code should be concrete enough to be understood while simultaneously being abstract enough to	allow for change.
+* Code is easy to understand when it clearly reflects the problem it’s solving, and thus openly	exposes that problem’s domain.
+* Isolate things that change from things that don’t change (high cohesion, loose coupling)
+* Each method should have a Single Responsibility and methods should be consistent. Consistent code enables future refactorings.
+* Follow the SOLID principles 
+* Seek stable landing points and create a git commit when the application complies and tests pass before moving on to the next functional change.
+
+### Project creation
+* Remove any unused boiler plate code generated from new project creation by the frameworks (i.e. Weather service in .NET).
+
+### Test Driven Development
+
+The application uses xUnit for Unit Tests, all development is done using red-green-refactor test driven development. 
+
+* Write tests that confirm what your code does first without any knowledge of how your code does it.
+* Tests are not the place for abstractions—they are the place for concretions. Abstractions belong in code.
+* When faced with a new requirement, first rearrange the existing code such that it's open to the new feature, and once that's complete, then add the new code
+* When refactoring, follow the flocking rules: 
+    1. Select the things that are most alike.
+    2. Find the smallest difference between them.
+    3. Make the simplest change to remove that difference
+
+### ASP.NET Rules
+* Ensure that controller routes are lower case.
+* Ensure that CORS support is available in development mode for all hosts, all headers
+* Ensure that the Swagger UI is available in development 
